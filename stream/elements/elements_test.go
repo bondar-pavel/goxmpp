@@ -22,13 +22,7 @@ func (bxml *BasicXML) UnmarshalXML(d *xml.Decoder, start xml.StartElement) error
 	return bxml.HandleInnerElements(d, start.End())
 }
 
-var basicXMLSource = `
-<html>
-    <body>
-        <div>test</div>
-    </body>
-</html>
-`
+var basicXMLSource = `<html><body><div>test</div></body></html>`
 
 func TestSimple(t *testing.T) {
 	bxml := NewBasicXML()
@@ -52,7 +46,7 @@ func TestSimple(t *testing.T) {
 		t.Fatal("Wrong InnerXML parsed")
 	}
 
-	if raw_xml, err := xml.MarshalIndent(bxml, "", "    "); err != nil {
+	if raw_xml, err := xml.Marshal(bxml); err != nil {
 		t.Fatal(err)
 	} else if strings.TrimSpace(string(raw_xml)) != strings.TrimSpace(basicXMLSource) {
 		t.Log("Got:", strings.TrimSpace(string(raw_xml)))

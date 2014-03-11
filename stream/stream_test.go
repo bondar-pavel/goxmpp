@@ -11,27 +11,9 @@ import "bytes"
 import "testing"
 import "log"
 
-var iqSource = `<iq to="test@conference.jabber.ru" id="ab7ca" type="set">
-sdfsdf
-    <query xmlns="http://jabber.org/protocol/muc#admin">
-    sfsdf
-        <item affiliation="outcast" jid="test1@example.net">test</item>
-        sdfsdf
-        <item affiliation="outcast" jid="test2@example.net">test1</item>
-        sfsdf
-    </query>
-    <unknown>test</unknown>
-    sdfsdf
-</iq>
-sdfdf`
+var iqSource = `<iq to="test@conference.jabber.ru" id="ab7ca" type="set">sdfsdf<query xmlns="http://jabber.org/protocol/muc#admin">sfsdf<item affiliation="outcast" jid="test1@example.net">test</item>sdfsdf<item affiliation="outcast" jid="test2@example.net">test1</item>sfsdf</query><unknown>test</unknown>sdfsdf</iq>sdfdf`
 
-var iqExpect = `<iq to="test@conference.jabber.ru" type="set" id="ab7ca">
-    <query xmlns="http://jabber.org/protocol/muc#admin">
-        <item affiliation="outcast" jid="test1@example.net">test</item>
-        <item affiliation="outcast" jid="test2@example.net">test1</item>
-    </query>
-    <unknown>test</unknown>
-</iq>`
+var iqExpect = `<iq to="test@conference.jabber.ru" type="set" id="ab7ca"><query xmlns="http://jabber.org/protocol/muc#admin"><item affiliation="outcast" jid="test1@example.net">test</item><item affiliation="outcast" jid="test2@example.net">test1</item>sfsdfsdfsdfsfsdf</query><unknown>test</unknown>sdfsdfsdfsdf</iq>`
 
 func is(got, expect []byte) bool {
 	got = bytes.TrimSpace(got)
@@ -65,7 +47,7 @@ func unmarshalTester(t *testing.T, source, expect []byte) {
 	}
 
 	log.Printf("%#v", s)
-	buffer, err := xml.MarshalIndent(s, "", "    ")
+	buffer, err := xml.Marshal(s)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -81,25 +63,9 @@ func TestIQElementUnmarshal(t *testing.T) {
 	unmarshalTester(t, []byte(iqSource), []byte(iqExpect))
 }
 
-var messageSource = `<message>
-    <body>hi!<some inner="xml">test</some></body>
-    <html xmlns="http://jabber.org/protocol/xhtml-im">
-        <body xmlns="http://www.w3.org/1999/xhtml">
-            <p style='font-weight:bold'>hi!</p>
-        </body>
-        <some-unknown-xml><with inner="xml">and with data</with></some-unknown-xml>
-    </html>
-</message>`
+var messageSource = `<message><body>hi!<some inner="xml">test</some></body><html xmlns="http://jabber.org/protocol/xhtml-im"><body xmlns="http://www.w3.org/1999/xhtml"><p style='font-weight:bold'>hi!</p></body><some-unknown-xml><with inner="xml">and with data</with></some-unknown-xml></html></message>`
 
-var messageExpect = `<message>
-    <body>hi!<some inner="xml">test</some></body>
-    <html xmlns="http://jabber.org/protocol/xhtml-im">
-        <body xmlns="http://www.w3.org/1999/xhtml">
-            <p style='font-weight:bold'>hi!</p>
-        </body>
-        <some-unknown-xml><with inner="xml">and with data</with></some-unknown-xml>
-    </html>
-</message>`
+var messageExpect = `<message><body>hi!<some inner="xml">test</some></body><html xmlns="http://jabber.org/protocol/xhtml-im"><body xmlns="http://www.w3.org/1999/xhtml"><p style='font-weight:bold'>hi!</p></body><some-unknown-xml><with inner="xml">and with data</with></some-unknown-xml></html></message>`
 
 func TestMessageElementUnmarshal(t *testing.T) {
 	unmarshalTester(t, []byte(messageSource), []byte(messageExpect))

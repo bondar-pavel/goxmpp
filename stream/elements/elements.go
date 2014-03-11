@@ -13,6 +13,7 @@ type InnerElements struct {
 	Elements       []Element
 	ElementFactory `xml:"-"`
 	RawXML         []*InnerXML
+	CDATA          []byte `xml:",chardata"`
 }
 
 func NewInnerElements(factory ElementFactory) *InnerElements {
@@ -20,6 +21,7 @@ func NewInnerElements(factory ElementFactory) *InnerElements {
 		Elements:       make([]Element, 0),
 		RawXML:         make([]*InnerXML, 0),
 		ElementFactory: factory,
+		CDATA:          make([]byte, 0),
 	}
 }
 
@@ -47,6 +49,8 @@ func (c *InnerElements) HandleInnerElements(d *xml.Decoder, final xml.EndElement
 			} else {
 				c.AddElement(elementObject)
 			}
+		case xml.CharData:
+			c.CDATA = append(c.CDATA, []byte(element)...)
 		}
 	}
 
