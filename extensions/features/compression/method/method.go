@@ -2,12 +2,13 @@ package method
 
 import (
 	"encoding/xml"
+
 	"github.com/dotdoom/goxmpp/extensions/features/compression"
 	"github.com/dotdoom/goxmpp/stream/elements"
 )
 
 func init() {
-	compression.ElementFactory.AddConstructor(" method", func() elements.Element { return &BasicMethod{} })
+	compression.CompressionFactory.AddConstructor(func() elements.Element { return &BasicMethod{} })
 }
 
 type BasicMethod struct {
@@ -17,5 +18,5 @@ type BasicMethod struct {
 
 type Method struct {
 	BasicMethod
-	elements.InnerElements
+	*elements.InnerElements
 }

@@ -9,20 +9,21 @@ import (
 )
 
 type Stream struct {
-	XMLName          xml.Name
-	ID               string `xml:"id,attr"`
-	From             string `xml:"from,attr"` // This holds user JID after auth.
-	To               string `xml:"to,attr"`
+	XMLName xml.Name
+	ID      string `xml:"id,attr"`
+	// TODO(dotdoom): 2014-04-03: should we really reverse the next two in gojabberd?
+	From             string `xml:"from,attr"` // This holds server domain name.
+	To               string `xml:"to,attr"`   // This holds user JID after bind.
 	Version          string `xml:"version,attr"`
 	DefaultNamespace string `xml:"-"`
 	Opened           bool   `xml:"-"`
 	State            State
 	Connection
-	elements.ElementFactory
 }
 
 func NewStream(rw io.ReadWriter) *Stream {
 	st := &Stream{}
+	// FIXME(dotdoom): 2014-04-03: need to set DefaultNamespace (here on in gojabberd)
 	st.SetRW(rw)
 	return st
 }
@@ -54,6 +55,16 @@ func (self *Stream) ReadOpen() error {
 			}
 		}
 	}
+}
+
+func (self *Stream) Close(send_close_tag bool) error {
+	self.Opened = false
+	if send_close_tag {
+		if _, err := io.WriteString(self.rw, "</stream:stream>"); err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 // TODO(artem): refactor
@@ -94,9 +105,11 @@ func (self *Stream) ReadElement() (elements.Element, error) {
 	for token, err := self.streamDecoder.Token(); err == nil; token, err = self.streamDecoder.Token() {
 		if start, ok := token.(xml.StartElement); ok {
 			log.Printf("got element: %v (ns %v)\n", start.Name.Local, start.Name.Space)
-			return self.DecodeElement(self.streamDecoder, &start)
+			return StreamFactory.DecodeElement(self.streamDecoder, &start)
 		}
 	}
 
 	return nil, err
 }
+
+var StreamFactory = elements.NewFactory()

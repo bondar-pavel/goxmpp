@@ -4,7 +4,6 @@ import "encoding/xml"
 import (
 	_ "github.com/dotdoom/goxmpp"
 	"github.com/dotdoom/goxmpp/stream"
-	"github.com/dotdoom/goxmpp/stream/elements/stanzas"
 )
 
 import "bytes"
@@ -22,6 +21,7 @@ sdfsdf
     </query>
     <unknown>test</unknown>
     sdfsdf
+    <unknown2>test</unknown2>
 </iq>
 sdfdf`
 
@@ -31,6 +31,7 @@ var iqExpect = `<iq to="test@conference.jabber.ru" type="set" id="ab7ca">
         <item affiliation="outcast" jid="test2@example.net">test1</item>
     </query>
     <unknown>test</unknown>
+    <unknown2>test</unknown2>
 </iq>`
 
 func is(got, expect []byte) bool {
@@ -58,7 +59,6 @@ func logEpectations(t *testing.T, got, expect, source []byte) {
 
 func unmarshalTester(t *testing.T, source, expect []byte) {
 	st := stream.NewStream(bytes.NewBuffer(source))
-	st.ElementFactory = stanzas.Factory
 	s, err := st.ReadElement()
 	if err != nil {
 		t.Fatal(err)

@@ -8,6 +8,7 @@ import (
 
 	"github.com/dotdoom/goxmpp/extensions/features/auth"
 	"github.com/dotdoom/goxmpp/stream"
+	"github.com/dotdoom/goxmpp/stream/elements"
 )
 
 type SuccessElement struct {
@@ -15,8 +16,25 @@ type SuccessElement struct {
 }
 
 type PlainState struct {
-	Callback          func(string, string) bool
-	RequireEncryption bool
+	VerifyUserAndPassword func(string, string) bool
+	RequireEncryption     bool
+}
+
+type PlainElement struct {
+	XMLName xml.Name `xml:"mechanism"`
+	Name    string   `xml:",chardata"`
+}
+
+func newPlainElement() *PlainElement {
+	return &PlainElement{Name: "PLAIN"}
+}
+
+func (self *PlainElement) CopyIfAvailable(stream *stream.Stream) elements.Element {
+	var plain_state *PlainState
+	if err := stream.State.Get(&plain_state); err == nil {
+		return self
+	}
+	return nil
 }
 
 var usernamePasswordSeparator = []byte{0}
@@ -27,23 +45,26 @@ func init() {
 		user_password := bytes.Split(b, usernamePasswordSeparator)
 
 		var plain_state *PlainState
-		stream.State.Get(&plain_state)
+		if err := stream.State.Get(&plain_state); err != nil {
+			return err
+		}
 
-		if plain_state.Callback(string(user_password[1]), string(user_password[2])) {
-			var auth_state *auth.State
+		if plain_state.VerifyUserAndPassword(string(user_password[1]), string(user_password[2])) {
+			var auth_state *auth.AuthState
 			if err := stream.State.Get(&auth_state); err != nil {
-				auth_state = &auth.State{}
+				auth_state = &auth.AuthState{}
 				stream.State.Push(auth_state)
 			}
 			auth_state.UserName = string(user_password[1])
 			auth_state.Mechanism = "PLAIN"
 
 			stream.WriteElement(&SuccessElement{})
-			stream.Opened = false
+			stream.Close(false)
 
 			return nil
 		} else {
 			return errors.New("AUTH FAILED")
 		}
 	})
+	auth.MechanismsElement.AddElement(newPlainElement())
 }
